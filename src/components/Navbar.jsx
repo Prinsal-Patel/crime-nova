@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Shield, Map, BarChart3, BrainCircuit, AlertTriangle, Settings, Menu, X, LogIn } from 'lucide-react';
 import './Navbar.css';
@@ -16,6 +16,13 @@ export default function Navbar() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const getLinkClass = (path) => {
+    let cls = 'nav-link';
+    if (location.pathname === path) cls += ' active';
+    if (path === '/sos') cls += ' nav-sos';
+    return cls;
+  };
+
   return (
     <nav className="navbar glass">
       <div className="navbar-inner container">
@@ -26,14 +33,12 @@ export default function Navbar() {
           <span className="brand-text">Crimenova</span>
         </Link>
 
-        <div className={
-avbar-links }>
+        <div className={'navbar-links' + (mobileOpen ? ' open' : '')}>
           {navLinks.map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
               to={path}
-              className={
-av-link  }
+              className={getLinkClass(path)}
               onClick={() => setMobileOpen(false)}
             >
               <Icon size={16} />
