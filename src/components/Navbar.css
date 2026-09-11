@@ -122,3 +122,35 @@
     width: 100%;
   }
 }
+
+.nav-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: var(--accent-gradient);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: var(--transition);
+  margin-left: 8px;
+}
+
+.nav-login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--accent-glow);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .nav-login-btn {
+    margin-left: 0;
+    margin-top: 8px;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 1rem;
+    border-radius: var(--radius-md);
+  }
+}

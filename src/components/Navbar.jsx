@@ -1,6 +1,6 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Shield, Map, BarChart3, BrainCircuit, AlertTriangle, Settings, Menu, X } from 'lucide-react';
+import { Shield, Map, BarChart3, BrainCircuit, AlertTriangle, Settings, Menu, X, LogIn } from 'lucide-react';
 import './Navbar.css';
 
 const navLinks = [
@@ -26,18 +26,24 @@ export default function Navbar() {
           <span className="brand-text">Crimenova</span>
         </Link>
 
-        <div className={`navbar-links ${mobileOpen ? 'open' : ''}`}>
+        <div className={
+avbar-links }>
           {navLinks.map(({ path, label, icon: Icon }) => (
             <Link
               key={path}
               to={path}
-              className={`nav-link ${location.pathname === path ? 'active' : ''} ${path === '/sos' ? 'nav-sos' : ''}`}
+              className={
+av-link  }
               onClick={() => setMobileOpen(false)}
             >
               <Icon size={16} />
               <span>{label}</span>
             </Link>
           ))}
+          <Link to="/login" className="nav-login-btn" onClick={() => setMobileOpen(false)}>
+            <LogIn size={16} />
+            <span>Login</span>
+          </Link>
         </div>
 
         <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
