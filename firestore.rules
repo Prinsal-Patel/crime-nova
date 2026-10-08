@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the requesting user is an admin
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // User Profiles
+    match /users/{userId} {
+      allow read: if request.auth != null;
+
+      // Users can write their own doc, but CANNOT change their own role field
+      // Only admins can write to any user doc (including role changes)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (
+        // Admin can update any user doc
+        isAdmin() ||
+        // Non-admin can update own doc, but cannot change the 'role' field
+        (request.auth.uid == userId && request.resource.data.role == resource.data.role)
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Emergency SOS Alerts
+    match /sos_alerts/{alertId} {
+      allow read: if request.auth != null;
+      // Any authenticated user can create an SOS alert
+      allow create: if request.auth != null;
+      // Only admins can update status or delete alerts
+      allow update, delete: if isAdmin();
+    }
+
+    // Crime Incidents
+    match /crimes/{crimeId} {
+      allow read: if true;
+      // Any authenticated user can report a crime
+      allow create: if request.auth != null;
+      // Only admins can update or delete crime records
+      allow update, delete: if isAdmin();
+    }
+
+    // Uploaded Datasets (admin-only)
+    match /datasets/{datasetId} {
+      allow read: if request.auth != null;
+      // Only admins can create/update/delete datasets
+      allow write: if isAdmin();
+    }
+  }
+}

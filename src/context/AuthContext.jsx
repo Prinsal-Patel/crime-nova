@@ -13,7 +13,8 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
 } from 'firebase/auth';
-import { auth, googleProvider, isFirebaseConfigured } from '../firebase/firebase';
+import { doc, setDoc, updateDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { auth, googleProvider, db, isFirebaseConfigured } from '../firebase/firebase';
 
 const AuthContext = createContext(null);
 
@@ -73,6 +74,7 @@ export function formatAuthError(error) {
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userRole, setUserRole] = useState('citizen');
   const [loading, setLoading] = useState(true);
   const [sessionNotice, setSessionNotice] = useState(null);
   const lastActiveThrottleRef = useRef(0);
@@ -109,6 +111,7 @@ export function AuthProvider({ children }) {
       }
       await signOut(auth);
       setCurrentUser(null);
+      setUserRole('citizen');
     } catch (error) {
       console.error('Logout error:', error);
       throw error;
@@ -160,6 +163,8 @@ export function AuthProvider({ children }) {
 
   // Auth state & token listeners
   useEffect(() => {
+    let unsubUserDoc = null;
+
     const unsubscribeAuth = onAuthStateChanged(
       auth,
       (user) => {
@@ -170,9 +175,41 @@ export function AuthProvider({ children }) {
           } else {
             recordActivity();
             setCurrentUser(user);
+
+            // Synchronize user profile in Firestore
+            try {
+              const userDocRef = doc(db, 'users', user.uid);
+              unsubUserDoc = onSnapshot(userDocRef, (snap) => {
+                if (snap.exists()) {
+                  const data = snap.data();
+                  setUserRole(data.role || 'citizen');
+                } else {
+                  // Initialize user profile document — always 'citizen' by default
+                  setUserRole('citizen');
+
+                  setDoc(userDocRef, {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName || 'Citizen',
+                    photoURL: user.photoURL || null,
+                    role: 'citizen',
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                  }, { merge: true }).catch((err) => {
+                    console.warn('[Firestore] Profile init warning:', err.message);
+                  });
+                }
+              }, (err) => {
+                console.warn('[Firestore] User listener warning:', err.message);
+              });
+            } catch (err) {
+              console.warn('[Firestore] Profile setup exception:', err);
+            }
           }
         } else {
           setCurrentUser(null);
+          setUserRole('citizen');
+          if (unsubUserDoc) unsubUserDoc();
         }
         setLoading(false);
       },
@@ -189,6 +226,7 @@ export function AuthProvider({ children }) {
     });
 
     return () => {
+      if (unsubUserDoc) unsubUserDoc();
       unsubscribeAuth();
       unsubscribeToken();
     };
@@ -221,6 +259,25 @@ export function AuthProvider({ children }) {
     localStorage.setItem(LAST_ACTIVE_KEY, now.toString());
     lastActiveThrottleRef.current = now;
     setSessionNotice(null);
+
+    // Save profile to Firestore
+    if (userCredential.user) {
+      try {
+        const u = userCredential.user;
+        await setDoc(doc(db, 'users', u.uid), {
+          uid: u.uid,
+          email: u.email,
+          displayName: displayName || 'Citizen',
+          photoURL: u.photoURL || null,
+          role: 'citizen',
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp(),
+        }, { merge: true });
+      } catch (err) {
+        console.warn('[Firestore] Signup profile save warning:', err);
+      }
+    }
+
     return userCredential;
   };
 
@@ -231,6 +288,18 @@ export function AuthProvider({ children }) {
     localStorage.setItem(LAST_ACTIVE_KEY, now.toString());
     lastActiveThrottleRef.current = now;
     setSessionNotice(null);
+
+    // Update lastLogin in Firestore
+    if (result.user) {
+      try {
+        await updateDoc(doc(db, 'users', result.user.uid), {
+          lastLogin: serverTimestamp(),
+        });
+      } catch {
+        // Safe to ignore if document does not exist yet
+      }
+    }
+
     return result;
   };
 
@@ -241,6 +310,23 @@ export function AuthProvider({ children }) {
     localStorage.setItem(LAST_ACTIVE_KEY, now.toString());
     lastActiveThrottleRef.current = now;
     setSessionNotice(null);
+
+    // Sync user profile to Firestore
+    if (result.user) {
+      try {
+        const u = result.user;
+        await setDoc(doc(db, 'users', u.uid), {
+          uid: u.uid,
+          email: u.email,
+          displayName: u.displayName || 'Citizen',
+          photoURL: u.photoURL || null,
+          lastLogin: serverTimestamp(),
+        }, { merge: true });
+      } catch (err) {
+        console.warn('[Firestore] Google login profile save warning:', err);
+      }
+    }
+
     return result;
   };
 
@@ -248,18 +334,27 @@ export function AuthProvider({ children }) {
     return sendPasswordResetEmail(auth, email);
   };
 
+  // Admin function to update another user's role in Firestore
+  const updateUserRole = async (targetUid, newRole) => {
+    if (!isAdmin) {
+      throw new Error('Only administrators can update user roles.');
+    }
+    await updateDoc(doc(db, 'users', targetUid), {
+      role: newRole,
+      updatedAt: serverTimestamp(),
+    });
+  };
+
   // Determine user role and admin authorization
-  const isAdmin = Boolean(
-    currentUser && (
-      currentUser.email?.toLowerCase().includes('admin') ||
-      currentUser.email?.toLowerCase() === 'admin@crimenova.org'
-    )
-  );
+  // Admin is determined ONLY by the Firestore 'role' field — no email fallback
+  const isAdmin = Boolean(currentUser && userRole === 'admin');
 
   const value = {
     currentUser,
     userLoggedIn: Boolean(currentUser),
+    userRole,
     isAdmin,
+    updateUserRole,
     loading,
     sessionNotice,
     clearSessionNotice,

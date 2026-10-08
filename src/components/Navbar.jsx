@@ -21,7 +21,7 @@ const navLinks = [
   { path: '/dashboard', label: 'Dashboard', icon: BarChart3, protected: true },
   { path: '/prediction', label: 'Prediction', icon: BrainCircuit, protected: true },
   { path: '/sos', label: 'SOS', icon: AlertTriangle, protected: true },
-  { path: '/admin', label: 'Admin', icon: Settings, protected: true },
+  { path: '/admin', label: 'Admin', icon: Settings, protected: true, adminOnly: true },
 ];
 
 export default function Navbar() {
@@ -62,6 +62,12 @@ export default function Navbar() {
     return 'U';
   };
 
+  // Filter out admin-only links for non-admin users
+  const visibleLinks = navLinks.filter((link) => {
+    if (link.adminOnly && !isAdmin) return false;
+    return true;
+  });
+
   return (
     <nav className="navbar glass">
       <div className="navbar-inner container">
@@ -73,7 +79,7 @@ export default function Navbar() {
         </Link>
 
         <div className={'navbar-links' + (mobileOpen ? ' open' : '')}>
-          {navLinks.map((link) => {
+          {visibleLinks.map((link) => {
             const Icon = link.icon;
             return (
               <Link

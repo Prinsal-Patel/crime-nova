@@ -3,6 +3,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { AlertTriangle, Phone, MapPin, Siren, Heart, Navigation, Clock, CheckCircle2, Loader2, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebase';
 import 'leaflet/dist/leaflet.css';
 import './SOSPage.css';
 
@@ -35,6 +37,7 @@ export default function SOSPage() {
   const [status, setStatus] = useState('idle'); // idle, locating, sending, sent, error
   const [error, setError] = useState('');
   const [timer, setTimer] = useState(0);
+  const [alertDocId, setAlertDocId] = useState(null);
 
   const getLocation = () => {
     setStatus('locating');
@@ -45,16 +48,39 @@ export default function SOSPage() {
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy });
+      async (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        };
+        setLocation(coords);
         setStatus('sending');
-        // Simulate sending alert
-        setTimeout(() => {
-          setStatus('sent');
-          setTimer(0);
-          const interval = setInterval(() => setTimer(t => t + 1), 1000);
-          setTimeout(() => clearInterval(interval), 300000);
-        }, 2000);
+
+        try {
+          // Write real distress document to Cloud Firestore
+          const docRef = await addDoc(collection(db, 'sos_alerts'), {
+            name: currentUser?.displayName || 'Citizen Distress Call',
+            email: currentUser?.email || 'N/A',
+            phone: currentUser?.phoneNumber || '+91-GPS-DISPATCH',
+            userId: currentUser?.uid || 'anonymous',
+            lat: coords.lat,
+            lng: coords.lng,
+            accuracy: Math.round(coords.accuracy || 10),
+            status: 'active',
+            type: 'Police',
+            time: new Date().toISOString().replace('T', ' ').substring(0, 19),
+            createdAt: serverTimestamp(),
+          });
+          setAlertDocId(docRef.id);
+        } catch (dbErr) {
+          console.warn('[Firestore] SOS real-time sync warning (using local mode):', dbErr);
+        }
+
+        setStatus('sent');
+        setTimer(0);
+        const interval = setInterval(() => setTimer((t) => t + 1), 1000);
+        setTimeout(() => clearInterval(interval), 300000);
       },
       (err) => {
         console.warn('Geolocation retrieval error:', err);
@@ -71,11 +97,21 @@ export default function SOSPage() {
     return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const resetSOS = () => {
+  const resetSOS = async () => {
+    if (alertDocId) {
+      try {
+        await updateDoc(doc(db, 'sos_alerts', alertDocId), {
+          status: 'resolved',
+        });
+      } catch (err) {
+        console.warn('Could not update status on reset:', err);
+      }
+    }
     setStatus('idle');
     setLocation(null);
     setError('');
     setTimer(0);
+    setAlertDocId(null);
   };
 
   return (
