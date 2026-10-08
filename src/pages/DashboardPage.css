@@ -1,7 +1,3 @@
-/* ============================================
-   Dashboard Page Styles
-   ============================================ */
-
 .dashboard-page {
   padding-bottom: 60px;
 }
@@ -139,11 +135,21 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .dash-stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .charts-grid { grid-template-columns: 1fr; }
+  .dash-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .dash-stats-grid { grid-template-columns: 1fr; }
-  .dash-stat-card { padding: 16px; }
+  .dash-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-stat-card {
+    padding: 16px;
+  }
 }

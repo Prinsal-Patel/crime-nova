@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { AlertTriangle, Phone, MapPin, Siren, Heart, Navigation, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertTriangle, Phone, MapPin, Siren, Heart, Navigation, Clock, CheckCircle2, Loader2, User } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import './SOSPage.css';
 
@@ -29,6 +30,7 @@ const emergencyContacts = [
 ];
 
 export default function SOSPage() {
+  const { currentUser } = useAuth();
   const [location, setLocation] = useState(null);
   const [status, setStatus] = useState('idle'); // idle, locating, sending, sent, error
   const [error, setError] = useState('');
@@ -55,6 +57,7 @@ export default function SOSPage() {
         }, 2000);
       },
       (err) => {
+        console.warn('Geolocation retrieval error:', err);
         setError('Unable to retrieve your location. Please enable GPS.');
         setStatus('error');
       },
@@ -117,6 +120,12 @@ export default function SOSPage() {
 
             {status === 'sent' && (
               <div className="sos-info-panel animate-fade-in-up">
+                {currentUser && (
+                  <div className="sos-info-row">
+                    <User size={16} />
+                    <span>Citizen: <strong>{currentUser.displayName || currentUser.email}</strong></span>
+                  </div>
+                )}
                 <div className="sos-info-row">
                   <Clock size={16} />
                   <span>Time Elapsed: <strong>{formatTime(timer)}</strong></span>
@@ -152,8 +161,13 @@ export default function SOSPage() {
                   scrollWheelZoom={true}
                 >
                   <TileLayer
-                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                    attribution='&copy; CARTO'
+                    attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+                    maxZoom={16}
+                  />
+                  <TileLayer
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+                    maxZoom={16}
                   />
                   {location && (
                     <>
