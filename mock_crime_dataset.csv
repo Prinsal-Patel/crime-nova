@@ -1,0 +1,31 @@
+latitude,longitude,crime_type,locality,date,severity
+28.6139,77.2090,Theft,Connaught Place - New Delhi,2025-09-12,high
+19.0760,72.8777,Robbery,Andheri West - Mumbai,2025-09-14,critical
+13.0827,80.2707,Assault,T. Nagar - Chennai,2025-09-15,medium
+22.5726,88.3639,Burglary,Park Street - Kolkata,2025-09-16,high
+12.9716,77.5946,Cybercrime,Koramangala - Bengaluru,2025-09-17,medium
+23.0225,72.5714,Chain Snatching,CG Road - Ahmedabad,2025-09-18,high
+26.9124,75.7873,Pickpocketing,Hawa Mahal - Jaipur,2025-09-19,low
+17.3850,78.4867,Vehicle Theft,Banjara Hills - Hyderabad,2025-09-20,high
+18.5204,73.8567,Fraud,Koregaon Park - Pune,2025-09-21,medium
+26.8467,80.9462,Kidnapping,Hazratganj - Lucknow,2025-09-22,critical
+21.1702,72.8311,Drug Trafficking,Adajan - Surat,2025-09-23,critical
+30.7333,76.7794,Eve Teasing,Sector 17 - Chandigarh,2025-09-24,medium
+25.3176,82.9739,Rioting,Godowlia - Varanasi,2025-09-25,high
+28.4595,77.0266,Murder,Sector 29 - Gurgaon,2025-09-26,critical
+19.2183,72.9781,Domestic Violence,Thane West - Thane,2025-09-27,high
+22.7196,75.8577,Theft,Vijay Nagar - Indore,2025-09-28,low
+15.4909,73.8278,Robbery,Calangute - Goa,2025-09-29,medium
+11.0168,76.9558,Assault,RS Puram - Coimbatore,2025-09-30,medium
+28.5355,77.3910,Burglary,Sector 62 - Noida,2025-10-01,high
+26.4499,80.3319,Cybercrime,Swaroop Nagar - Kanpur,2025-10-02,medium
+23.2599,77.4126,Vehicle Theft,MP Nagar - Bhopal,2025-10-03,high
+21.1458,79.0882,Chain Snatching,Sitabuldi - Nagpur,2025-10-04,medium
+9.9312,76.2673,Fraud,Marine Drive - Kochi,2025-10-05,low
+25.6093,85.1376,Pickpocketing,Boring Road - Patna,2025-10-06,low
+28.6353,77.2250,Vandalism,Chandni Chowk - Old Delhi,2025-10-07,medium
+19.0330,73.0297,Theft,Vashi - Navi Mumbai,2025-10-08,low
+12.2958,76.6394,Assault,Devaraja Mohalla - Mysuru,2025-10-09,medium
+30.9010,75.8573,Robbery,Civil Lines - Ludhiana,2025-10-10,high
+22.3072,73.1812,Drug Trafficking,Fatehgunj - Vadodara,2025-10-11,critical
+20.2961,85.8245,Kidnapping,Saheed Nagar - Bhubaneswar,2025-10-12,critical
